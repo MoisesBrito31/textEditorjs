@@ -8,13 +8,22 @@
         </div>
       <b-form>
         <b-form-group class="mt-3 pt-3" >
-            <b-button @click="postDadosOS" v-bind:class="{disabled:!podeCadastrar}"  block variant="primary">
+            <b-button @click="salvarEditor" v-bind:class="{disabled:!podeCadastrar}"  block variant="primary">
                 <span v-show="espera">
                 <b-spinner type="grow" variant="light"></b-spinner>
                 <b-spinner type="grow" variant="light"></b-spinner>
                 <b-spinner type="grow" variant="light"></b-spinner>
                </span>
                <span v-show="!espera">Salvar</span>
+            </b-button>
+
+            <b-button @click="carregaEditor" v-bind:class="{disabled:!podeCadastrar}"  block variant="primary">
+                <span v-show="espera">
+                <b-spinner type="grow" variant="light"></b-spinner>
+                <b-spinner type="grow" variant="light"></b-spinner>
+                <b-spinner type="grow" variant="light"></b-spinner>
+               </span>
+               <span v-show="!espera">Carregar</span>
             </b-button>
         </b-form-group>
         </b-form>
@@ -51,31 +60,30 @@ export default {
   name: 'editorJS-data-Add',
   created(){
     const editor = new EditorJS({ 
-  /** 
-   * Id of Element that should contain the Editor 
-   */ 
-  holder: 'editorjs', 
-  
-  /** 
-   * Available Tools list. 
-   * Pass Tool's class or Settings object for each Tool you want to use 
-   */ 
-  tools: { 
-    header: Header, 
-    list: List,
-    image: SimpleImage,
-    checklist: {
-      class: Checklist,
-      inlineToolbar: true,
-    },
-    linkTool: {
-      class: LinkTool,
-      config: {
-        endpoint: 'http://localhost:8080/fetchUrl', // Your backend endpoint for url data fetching,
+      holder: 'editorjs', 
+      tools: { 
+        header: Header, 
+        list: List,
+        image: SimpleImage,
+        checklist: {
+          class: Checklist,
+          inlineToolbar: true,
+        },
+        linkTool: {
+          class: LinkTool,
+          config: {
+            endpoint: 'http://localhost:8080/fetchUrl', // Your backend endpoint for url data fetching,
+          }
+        }
+      }, 
+      data:{"time":1730595179986,"blocks":[{"id":"WVi9BhcP4b","type":"header","data":{"text":"titulo","level":2}},{"id":"8164esLp9v","type":"paragraph","data":{"text":"texto1"}},{"id":"W0RrZ9I-fr","type":"paragraph","data":{"text":"texto2"}}],"version":"2.30.6"},
+      onReady:()=>{
+        alert("carregado!")
+      },
+      onChange:(api,event) =>{
+        console.log('mudanca no editor: ',event)
       }
-    }
-  }, 
-})
+    })
     this.editor = editor;
   },
   data(){
@@ -91,6 +99,7 @@ export default {
         falha: false,
         obj:{'name':'','description':''},
         editor: {},
+        memoria:[],
     }
   },computed:{
     ...mapGetters(['getDominio','getToken']),    
@@ -119,6 +128,17 @@ export default {
             formdata.append('color',this.obj.color)
             formdata.append('colorHTML',`color:${this.obj.color};`)
             return formdata
+    },
+    salvarEditor(){
+      this.editor.save().then((outputData)=>{
+        console.log('dados do artigo: ',outputData)
+        this.memoria = outputData;
+      }).catch((error)=>{
+        console.log('erro ao tentar salvar',error)
+      })
+    },
+    carregaEditor(){
+      this.editor.render(this.memoria);
     },
     async postDadosOS(){
         this.espera=true
